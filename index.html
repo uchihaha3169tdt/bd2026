@@ -1,0 +1,937 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thư Tình 💌</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Dancing+Script:wght@400;600;700&family=Lora:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --cream: #fdf6ee;
+        --blush: #f7c5c0;
+        --rose: #e8928a;
+        --dusty: #d4a5a5;
+        --ink: #5c3d3d;
+        --gold: #c9956a;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        font-family: "Lora", serif;
+        background: var(--cream);
+        color: var(--ink);
+      }
+
+      .page {
+        position: absolute;
+        inset: 0;
+        transition:
+          transform 0.9s cubic-bezier(0.77, 0, 0.18, 1),
+          opacity 0.9s ease;
+      }
+      .page.hidden-left {
+        transform: translateX(-100%);
+        opacity: 0;
+        pointer-events: none;
+      }
+      .page.hidden-right {
+        transform: translateX(100%);
+        opacity: 0;
+        pointer-events: none;
+      }
+      .page.active {
+        transform: translateX(0);
+        opacity: 1;
+      }
+
+      /* ── NAV DOTS ── */
+      .nav {
+        position: fixed;
+        bottom: 28px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 12px;
+        z-index: 100;
+      }
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--dusty);
+        border: none;
+        cursor: pointer;
+        transition:
+          background 0.3s,
+          transform 0.3s;
+      }
+      .dot.active {
+        background: var(--rose);
+        transform: scale(1.4);
+      }
+
+      /* ══════════════════════════════
+     PAGE 1 — ENVELOPE (FIXED)
+  ══════════════════════════════ */
+      #page1 {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(
+          145deg,
+          #fdf0e8 0%,
+          #fce8e8 50%,
+          #f0e8f8 100%
+        );
+        overflow: hidden;
+        padding-top: 20px;
+      }
+      #page1::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image:
+          radial-gradient(
+            circle at 20% 20%,
+            rgba(247, 197, 192, 0.4) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 80% 80%,
+            rgba(212, 197, 226, 0.4) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 50% 50%,
+            rgba(249, 232, 240, 0.6) 0%,
+            transparent 60%
+          );
+      }
+
+      .page1-title {
+        font-family: "Dancing Script", cursive;
+        font-size: clamp(1.6rem, 4vw, 2.4rem);
+        color: var(--rose);
+        margin-bottom: 80px; /* Tạo khoảng trống để thư kéo lên */
+        letter-spacing: 1px;
+        text-shadow: 0 2px 8px rgba(232, 146, 138, 0.25);
+        z-index: 1;
+      }
+
+      /* Kích thước bao thư chuẩn */
+      .env-scene {
+        position: relative;
+        width: min(390px, 88vw);
+        z-index: 1;
+        user-select: none;
+      }
+
+      .envelope {
+        position: relative;
+        width: 100%;
+        padding-bottom: 68%; /* Tỉ lệ cố định cho phong bì */
+        border-radius: 8px;
+        box-shadow:
+          0 20px 60px rgba(180, 100, 100, 0.2),
+          0 6px 20px rgba(180, 100, 100, 0.12);
+        perspective: 1000px;
+      }
+
+      /* Mặt trong của phong bì */
+      .env-back {
+        position: absolute;
+        inset: 0;
+        background: #eabfb0;
+        border-radius: 8px;
+        z-index: 1;
+      }
+
+      /* ── THE LETTER (FIXED) ── */
+      .letter-wrapper {
+        position: absolute;
+        top: 4%;
+        bottom: 4%;
+        left: 4%;
+        right: 4%; /* Nằm lọt thỏm hoàn toàn trong phong bì */
+        z-index: 2; /* Nằm giữa mặt trong và mặt ngoài phong bì */
+        transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .letter-wrapper.pulled {
+        transform: translateY(
+          -90%
+        ); /* Kéo lên 72%, vẫn giữ lại phần chân trong túi */
+      }
+
+      .letter {
+        width: 100%;
+        height: 100%;
+        background: #fffbf5;
+        border-radius: 6px;
+        padding: 16px 20px;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.08);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        background-image: repeating-linear-gradient(
+          transparent,
+          transparent 27px,
+          rgba(201, 149, 106, 0.12) 27px,
+          rgba(201, 149, 106, 0.12) 28px
+        );
+        background-size: 100% 28px;
+        background-position: 0 24px;
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
+      .letter::-webkit-scrollbar {
+        width: 4px;
+      }
+      .letter::-webkit-scrollbar-thumb {
+        background: rgba(232, 146, 138, 0.3);
+        border-radius: 4px;
+      }
+
+      .letter-date {
+        font-family: "Dancing Script", cursive;
+        font-size: 0.8rem;
+        color: var(--dusty);
+        text-align: right;
+        margin-bottom: 6px;
+      }
+      .letter h3 {
+        font-family: "Dancing Script", cursive;
+        font-size: 1.15rem;
+        color: var(--rose);
+        margin-bottom: 8px;
+      }
+      .letter p {
+        font-size: 0.82rem;
+        line-height: 1.6;
+        color: var(--ink);
+        font-style: italic;
+        margin-bottom: 6px;
+      }
+      .letter-sign {
+        font-family: "Dancing Script", cursive;
+        font-size: 1.1rem;
+        color: var(--gold);
+        text-align: right;
+        margin-top: 10px;
+      }
+
+      /* Gợi ý kéo thư */
+      .pull-hint {
+        position: absolute;
+        top: -28px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 0.85rem;
+        color: var(--dusty);
+        white-space: nowrap;
+        font-family: "Dancing Script", cursive;
+        opacity: 0;
+        transition: opacity 0.4s 0.5s;
+        pointer-events: none;
+        animation: bounce-up 1.4s ease-in-out infinite;
+      }
+      .letter-wrapper.ready .pull-hint {
+        opacity: 1;
+      }
+      .letter-wrapper.pulled .pull-hint {
+        opacity: 0;
+        transition: opacity 0.2s;
+        animation: none;
+      }
+
+      @keyframes bounce-up {
+        0%,
+        100% {
+          transform: translateX(-50%) translateY(0);
+        }
+        50% {
+          transform: translateX(-50%) translateY(-5px);
+        }
+      }
+
+      /* ── MẶT TRƯỚC PHONG BÌ ── */
+      .env-left {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 50%;
+        background: linear-gradient(135deg, #f0c8b8 0%, #e8b4a0 100%);
+        clip-path: polygon(0 0, 100% 50%, 0 100%);
+        z-index: 3;
+        border-radius: 8px 0 0 8px;
+      }
+      .env-right {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 50%;
+        background: linear-gradient(225deg, #f0c8b8 0%, #e8b4a0 100%);
+        clip-path: polygon(100% 0, 0 50%, 100% 100%);
+        z-index: 3;
+        border-radius: 0 8px 8px 0;
+      }
+      .env-bottom {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 60%;
+        background: linear-gradient(180deg, #f9ede0 0%, #f5d8cc 100%);
+        clip-path: polygon(0 100%, 50% 0, 100% 100%);
+        z-index: 4;
+        border-radius: 0 0 8px 8px;
+      }
+
+      /* Nắp phong bì */
+      .env-flap {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 58%;
+        background: linear-gradient(160deg, #f5cfc0 0%, #edb8a8 100%);
+        /* Cắt hình đa giác có vai phẳng để che kín tuyệt đối góc lá thư */
+        clip-path: polygon(0 0, 100% 0, 100% 20%, 50% 100%, 0 20%);
+        transform-origin: top center;
+        transition:
+          transform 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+          z-index 0s 0.35s;
+        z-index: 5;
+        border-radius: 8px 8px 0 0;
+      }
+      .env-flap.open {
+        transform: rotateX(-180deg);
+        z-index: 1; /* Khi mở sẽ vòng ra sau lưng lá thư */
+      }
+
+      /* Con dấu */
+      .seal {
+        position: absolute;
+        left: 50%;
+        top: 58%; /* Nằm ngay đầu nhọn của nắp thư */
+        transform: translate(-50%, -50%);
+        width: 46px;
+        height: 46px;
+        background: radial-gradient(circle at 40% 35%, #e05a5a, #b03030);
+        border-radius: 50%;
+        z-index: 6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        box-shadow: 0 4px 12px rgba(176, 48, 48, 0.4);
+        cursor: pointer;
+        transition:
+          transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+          opacity 0.4s;
+      }
+      .seal:hover {
+        transform: translate(-50%, -50%) scale(1.1);
+        box-shadow: 0 6px 18px rgba(176, 48, 48, 0.5);
+      }
+      .seal.hidden {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .btn-next {
+        margin-top: 56px;
+        padding: 12px 36px;
+        background: linear-gradient(135deg, var(--rose), var(--dusty));
+        color: #fff;
+        border: none;
+        border-radius: 50px;
+        font-family: "Dancing Script", cursive;
+        font-size: 1.1rem;
+        cursor: pointer;
+        z-index: 1;
+        box-shadow: 0 6px 20px rgba(232, 146, 138, 0.35);
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+      .btn-next:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 28px rgba(232, 146, 138, 0.45);
+      }
+
+      /* Petals */
+      .petal {
+        position: absolute;
+        pointer-events: none;
+        font-size: 1.1rem;
+        animation: fall linear infinite;
+        opacity: 0.7;
+      }
+      @keyframes fall {
+        0% {
+          transform: translateY(-20px) rotate(0deg);
+          opacity: 0.8;
+        }
+        100% {
+          transform: translateY(110vh) rotate(360deg);
+          opacity: 0.2;
+        }
+      }
+
+      /* ══════════════════════════════
+     PAGE 2 — BUBBLES
+  ══════════════════════════════ */
+      #page2 {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: linear-gradient(
+          170deg,
+          #e8f4fd 0%,
+          #f0e8f8 40%,
+          #fde8f0 100%
+        );
+        overflow: hidden;
+        padding: 0 16px 80px;
+      }
+      .page2-title {
+        font-family: "Dancing Script", cursive;
+        font-size: clamp(1.6rem, 4vw, 2.4rem);
+        color: #7a5c8a;
+        padding-top: 36px;
+        margin-bottom: 10px;
+        text-align: center;
+        text-shadow: 0 2px 8px rgba(122, 92, 138, 0.2);
+      }
+      .page2-sub {
+        font-size: 0.8rem;
+        color: #a08ab0;
+        font-style: italic;
+        margin-bottom: 28px;
+      }
+
+      .msg-board {
+        width: 100%;
+        max-width: 480px;
+        min-height: 80px;
+        background: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        padding: 16px 22px;
+        margin-bottom: 28px;
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        box-shadow: 0 4px 20px rgba(160, 130, 180, 0.12);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        position: relative;
+      }
+      .msg-text {
+        font-family: "Dancing Script", cursive;
+        font-size: 1.25rem;
+        color: #5c3d6e;
+        line-height: 1.5;
+        opacity: 0;
+        transform: translateY(8px);
+        transition:
+          opacity 0.5s,
+          transform 0.5s;
+      }
+      .msg-text.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .msg-placeholder {
+        font-size: 0.85rem;
+        color: #c0a8d0;
+        font-style: italic;
+      }
+
+      .bubbles-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        justify-content: center;
+        max-width: 480px;
+        width: 100%;
+      }
+      .bubble {
+        position: relative;
+        width: clamp(72px, 18vw, 90px);
+        height: clamp(72px, 18vw, 90px);
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        transition:
+          transform 0.15s,
+          box-shadow 0.15s,
+          opacity 0.4s;
+        box-shadow:
+          0 6px 20px -4px rgba(0, 0, 0, 0.18),
+          inset 0 -4px 10px rgba(255, 255, 255, 0.3),
+          inset 0 2px 8px rgba(255, 255, 255, 0.5);
+        animation: float-bubble ease-in-out infinite;
+        flex-shrink: 0;
+      }
+      .bubble::after {
+        content: "";
+        position: absolute;
+        top: 14%;
+        left: 22%;
+        width: 28%;
+        height: 20%;
+        background: rgba(255, 255, 255, 0.55);
+        border-radius: 50%;
+        transform: rotate(-30deg);
+        pointer-events: none;
+      }
+      @keyframes float-bubble {
+        0%,
+        100% {
+          transform: translateY(0) scale(1);
+        }
+        50% {
+          transform: translateY(-8px) scale(1.02);
+        }
+      }
+      .bubble:hover {
+        transform: scale(1.12) translateY(-4px) !important;
+      }
+      .bubble.popped {
+        animation: pop-anim 0.4s ease forwards;
+      }
+      @keyframes pop-anim {
+        0% {
+          transform: scale(1);
+          opacity: 1;
+        }
+        40% {
+          transform: scale(1.25);
+          opacity: 0.8;
+        }
+        100% {
+          transform: scale(0);
+          opacity: 0;
+        }
+      }
+
+      .b0 {
+        background: radial-gradient(circle at 35% 35%, #f9c8d8, #e88aaa);
+        animation-duration: 3.2s;
+      }
+      .b1 {
+        background: radial-gradient(circle at 35% 35%, #c8d8f9, #8aaaee);
+        animation-duration: 2.8s;
+        animation-delay: 0.4s;
+      }
+      .b2 {
+        background: radial-gradient(circle at 35% 35%, #d8f9c8, #aaeea0);
+        animation-duration: 3.5s;
+        animation-delay: 0.8s;
+      }
+      .b3 {
+        background: radial-gradient(circle at 35% 35%, #f9f0c8, #eedd88);
+        animation-duration: 2.6s;
+        animation-delay: 0.2s;
+      }
+      .b4 {
+        background: radial-gradient(circle at 35% 35%, #e8c8f9, #c888ee);
+        animation-duration: 3.8s;
+        animation-delay: 0.6s;
+      }
+      .b5 {
+        background: radial-gradient(circle at 35% 35%, #c8f9f4, #88eedc);
+        animation-duration: 3.1s;
+        animation-delay: 1s;
+      }
+      .b6 {
+        background: radial-gradient(circle at 35% 35%, #f9d8c8, #eeaa88);
+        animation-duration: 2.9s;
+        animation-delay: 0.3s;
+      }
+      .b7 {
+        background: radial-gradient(circle at 35% 35%, #f0c8f9, #dd88ee);
+        animation-duration: 3.4s;
+        animation-delay: 0.7s;
+      }
+      .b8 {
+        background: radial-gradient(circle at 35% 35%, #c8eef9, #88ccee);
+        animation-duration: 3s;
+        animation-delay: 0.1s;
+      }
+      .b9 {
+        background: radial-gradient(circle at 35% 35%, #f9e8c8, #eebb88);
+        animation-duration: 2.7s;
+        animation-delay: 0.9s;
+      }
+      .b10 {
+        background: radial-gradient(circle at 35% 35%, #c8f9e0, #88ee99);
+        animation-duration: 3.6s;
+        animation-delay: 0.5s;
+      }
+      .b11 {
+        background: radial-gradient(circle at 35% 35%, #f9c8c8, #ee8888);
+        animation-duration: 3.3s;
+        animation-delay: 1.1s;
+      }
+
+      .particle {
+        position: fixed;
+        pointer-events: none;
+        border-radius: 50%;
+        animation: particle-fly 0.6s ease-out forwards;
+        z-index: 999;
+      }
+      @keyframes particle-fly {
+        0% {
+          transform: translate(0, 0) scale(1);
+          opacity: 1;
+        }
+        100% {
+          transform: translate(var(--dx), var(--dy)) scale(0);
+          opacity: 0;
+        }
+      }
+
+      .btn-back {
+        margin-top: 32px;
+        padding: 10px 30px;
+        background: linear-gradient(135deg, #b088cc, #8888dd);
+        color: #fff;
+        border: none;
+        border-radius: 50px;
+        font-family: "Dancing Script", cursive;
+        font-size: 1rem;
+        cursor: pointer;
+        box-shadow: 0 6px 20px rgba(136, 136, 221, 0.3);
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+      .btn-back:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 28px rgba(136, 136, 221, 0.4);
+      }
+      .reset-link {
+        display: block;
+        text-align: center;
+        margin-top: 8px;
+        font-size: 0.75rem;
+        color: #c0a8d0;
+        cursor: pointer;
+        font-style: italic;
+        text-decoration: underline dotted;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="page1" class="page active">
+      <h1 class="page1-title">✉️ Có lá thư cho em...</h1>
+
+      <div class="env-scene">
+        <div class="envelope" id="envelope">
+          <div class="env-back"></div>
+          <div class="env-flap" id="flap"></div>
+          <div class="env-left"></div>
+          <div class="env-right"></div>
+          <div class="env-bottom"></div>
+
+          <div class="letter-wrapper" id="letterWrapper">
+            <span class="pull-hint">↑ Nhấn hoặc kéo thư ra ↑</span>
+            <div class="letter" id="letter">
+              <div class="letter-date">12 tháng 3, 2026 🌸</div>
+              <h3>Gửi người yêu dấu của anh,</h3>
+              <p>
+                Chúc em tuổi mới tràn đầy niềm vui và hạnh phúc...<br />
+                Mỗi ngày sau này đều trở nên rực rỡ hơn.<br />
+                Mong em sẽ có những trang đẹp nhất trong cuốn sách cuộc đời
+                chính mình. 🌷
+              </p>
+              <p>
+                Chúc những điều tốt đẹp đều đến với em như cách em đến bên anh.
+              </p>
+              <div class="letter-sign">
+                Mãi yêu em, <em>Người yêu anh</em> 💕
+              </div>
+            </div>
+          </div>
+
+          <div class="seal" id="seal">💋</div>
+        </div>
+      </div>
+
+      <button class="btn-next" id="btnNext">Sang trang kế → 🎈</button>
+    </div>
+
+    <div id="page2" class="page hidden-right">
+      <h1 class="page2-title">🫧 Nhấn vào bong bóng!</h1>
+      <p class="page2-sub">Mỗi bong bóng chứa một điều bí mật nhỏ...</p>
+      <div class="msg-board" id="msgBoard">
+        <span class="msg-placeholder" id="msgPlaceholder"
+          >✨ Chọn một bong bóng bất kỳ...</span
+        >
+        <span class="msg-text" id="msgText"></span>
+      </div>
+      <div class="bubbles-grid" id="bubblesGrid"></div>
+      <span class="reset-link" id="resetBubbles">🔄 Làm mới bong bóng</span>
+      <button class="btn-back" id="btnBack">← Quay lại thư</button>
+    </div>
+
+    <nav class="nav">
+      <button class="dot active" data-page="0"></button>
+      <button class="dot" data-page="1"></button>
+    </nav>
+
+    <script>
+      /* ── PETALS ── */
+      (function spawnPetals() {
+        const items = ["🌸", "🌺", "✿", "💮", "🌹", "💐", "🍀"];
+        for (let i = 0; i < 18; i++) {
+          const el = document.createElement("span");
+          el.className = "petal";
+          el.textContent = items[Math.floor(Math.random() * items.length)];
+          el.style.cssText = `left:${Math.random() * 100}vw; top:${Math.random() * -40}vh; font-size:${0.7 + Math.random() * 0.8}rem; animation-duration:${6 + Math.random() * 10}s; animation-delay:${Math.random() * 8}s;`;
+          document.getElementById("page1").appendChild(el);
+        }
+      })();
+
+      /* ── ENVELOPE / LETTER DRAG (FIXED) ── */
+      const flap = document.getElementById("flap");
+      const letterWrap = document.getElementById("letterWrapper");
+      const seal = document.getElementById("seal");
+      let envOpen = false;
+      let letterOut = false;
+
+      function openEnvelope() {
+        if (envOpen) return;
+        envOpen = true;
+        seal.classList.add("hidden");
+        flap.classList.add("open");
+        setTimeout(() => {
+          letterWrap.classList.add("ready");
+        }, 600);
+      }
+
+      seal.addEventListener("click", openEnvelope);
+      seal.addEventListener("touchstart", openEnvelope, { passive: true });
+
+      /* Cho phép click vào lá thư để mở/đóng mượt mà */
+      letterWrap.addEventListener("click", () => {
+        if (!envOpen) {
+          openEnvelope();
+          return;
+        }
+        letterOut = !letterOut;
+        letterWrap.classList.toggle("pulled", letterOut);
+      });
+
+      /* Vuốt mượt không bị lỗi hiển thị */
+      let startY = 0,
+        currentY = 0,
+        dragging = false;
+
+      function onDragStart(e) {
+        if (!envOpen) return;
+        dragging = true;
+        startY = e.touches ? e.touches[0].clientY : e.clientY;
+        letterWrap.style.transition = "none"; // Tắt transition để kéo mượt
+      }
+      function onDragMove(e) {
+        if (!dragging) return;
+        currentY = e.touches ? e.touches[0].clientY : e.clientY;
+        const dy = startY - currentY;
+
+        // Tính phần trăm kéo (chỉ tạo hiệu ứng drag tay nhẹ nhàng)
+        if (dy > 0 && !letterOut) {
+          const pct = Math.min(dy / 3, 72);
+          letterWrap.style.transform = `translateY(-${pct}%)`;
+        } else if (dy < 0 && letterOut) {
+          const pct = 72 - Math.min(-dy / 3, 72);
+          letterWrap.style.transform = `translateY(-${pct}%)`;
+        }
+        if (e.cancelable) e.preventDefault();
+      }
+      function onDragEnd() {
+        if (!dragging) return;
+        dragging = false;
+        letterWrap.style.transition = ""; // Bật lại transition
+        letterWrap.style.transform = ""; // Xóa style nội tuyến để class .pulled đảm nhiệm
+
+        const dy = startY - currentY;
+        if (!letterOut && dy > 30) {
+          letterOut = true;
+        } else if (letterOut && dy < -30) {
+          letterOut = false;
+        }
+        letterWrap.classList.toggle("pulled", letterOut);
+      }
+
+      letterWrap.addEventListener("mousedown", onDragStart);
+      letterWrap.addEventListener("touchstart", onDragStart, { passive: true });
+      document.addEventListener("mousemove", onDragMove);
+      document.addEventListener("touchmove", onDragMove, { passive: false });
+      document.addEventListener("mouseup", onDragEnd);
+      document.addEventListener("touchend", onDragEnd);
+
+      /* ── PAGE NAV ── */
+      const pages = [
+        document.getElementById("page1"),
+        document.getElementById("page2"),
+      ];
+      const dots = document.querySelectorAll(".dot");
+      let current = 0;
+      function goTo(n) {
+        pages[current].className =
+          "page " + (n > current ? "hidden-left" : "hidden-right");
+        current = n;
+        pages[current].className = "page active";
+        dots.forEach((d, i) => d.classList.toggle("active", i === current));
+      }
+      document
+        .getElementById("btnNext")
+        .addEventListener("click", () => goTo(1));
+      document
+        .getElementById("btnBack")
+        .addEventListener("click", () => goTo(0));
+      dots.forEach((d) =>
+        d.addEventListener("click", () => goTo(+d.dataset.page)),
+      );
+
+      /* ── BUBBLES ── */
+      const bubbleData = [
+        {
+          emoji: "🎂",
+          msg: "Chúc em một sinh nhật thật vui vẻ, luôn tràn đầy nụ cười và hạnh phúc 🎉",
+        },
+        {
+          emoji: "🌸",
+          msg: "Chúc tuổi mới của em luôn xinh đẹp, rạng rỡ và gặp thật nhiều điều tốt đẹp 🌷",
+        },
+        {
+          emoji: "💖",
+          msg: "Mong rằng mọi điều ước trong ngày sinh nhật của em đều sẽ trở thành hiện thực ✨",
+        },
+        {
+          emoji: "🎁",
+          msg: "Sinh nhật này chỉ mong em luôn vui vẻ, bình an và hạnh phúc mỗi ngày 🎀",
+        },
+        {
+          emoji: "🌟",
+          msg: "Chúc em tuổi mới luôn tỏa sáng và đạt được mọi điều em mong muốn ⭐",
+        },
+        {
+          emoji: "🍰",
+          msg: "Hy vọng em luôn mạnh khỏe và mau chóng hết ho để có ngày sinh nhật trọn vẹn 🎂",
+        },
+        {
+          emoji: "🌈",
+          msg: "Chúc cuộc sống của em luôn rực rỡ như cầu vồng sau cơn mưa 🌦️",
+        },
+        {
+          emoji: "🎶",
+          msg: "Mong rằng mỗi ngày của em đều tràn đầy tiếng cười và niềm vui 🎵",
+        },
+        {
+          emoji: "🍀",
+          msg: "Chúc em luôn may mắn, hạnh phúc và thành công trong mọi điều 🍃",
+        },
+        {
+          emoji: "🦋",
+          msg: "Tuổi mới mong em luôn tự do, nhẹ nhàng và xinh đẹp như cánh bướm 🦋",
+        },
+        {
+          emoji: "🌙",
+          msg: "Dù ngày hay đêm, mong em luôn cảm thấy được yêu thương và trân trọng 💫",
+        },
+        {
+          emoji: "🫶",
+          msg: "Chúc mừng sinh nhật em! Cảm ơn em đã đến và làm cuộc sống của anh trở nên đặc biệt hơn 💝",
+        },
+      ];
+
+      const grid = document.getElementById("bubblesGrid");
+      const msgText = document.getElementById("msgText");
+      const msgPlaceholder = document.getElementById("msgPlaceholder");
+
+      function buildBubbles() {
+        grid.innerHTML = "";
+        bubbleData.forEach((b, i) => {
+          const el = document.createElement("div");
+          el.className = `bubble b${i}`;
+          el.textContent = b.emoji;
+          el.dataset.msg = b.msg;
+          el.style.animationDuration = `${2.6 + Math.random() * 1.4}s`;
+          el.style.animationDelay = `${Math.random() * 1.2}s`;
+          el.addEventListener("click", popBubble);
+          el.addEventListener(
+            "touchstart",
+            (e) => {
+              e.preventDefault();
+              popBubble.call(el, e);
+            },
+            { passive: false },
+          );
+          grid.appendChild(el);
+        });
+      }
+
+      function popBubble(e) {
+        const el = this || e.currentTarget;
+        const msg = el.dataset.msg;
+        if (!msg) return;
+        const rect = el.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        for (let k = 0; k < 10; k++) {
+          const p = document.createElement("div");
+          p.className = "particle";
+          const size = 6 + Math.random() * 8;
+          const angle = Math.random() * Math.PI * 2;
+          const dist = 40 + Math.random() * 60;
+          p.style.cssText = `left:${cx}px; top:${cy}px; width:${size}px; height:${size}px; background:hsl(${Math.random() * 360},80%,70%); --dx:${Math.cos(angle) * dist}px; --dy:${Math.sin(angle) * dist}px;`;
+          document.body.appendChild(p);
+          setTimeout(() => p.remove(), 700);
+        }
+        el.classList.add("popped");
+        el.removeEventListener("click", popBubble);
+        setTimeout(() => el.remove(), 400);
+        msgText.classList.remove("visible");
+        msgPlaceholder.style.display = "none";
+        setTimeout(() => {
+          msgText.textContent = msg;
+          msgText.classList.add("visible");
+        }, 120);
+      }
+
+      document.getElementById("resetBubbles").addEventListener("click", () => {
+        buildBubbles();
+        msgText.classList.remove("visible");
+        msgText.textContent = "";
+        msgPlaceholder.style.display = "";
+      });
+      buildBubbles();
+    </script>
+  </body>
+</html>
